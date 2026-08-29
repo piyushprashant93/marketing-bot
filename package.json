@@ -1,0 +1,42 @@
+{
+  "name": "whatsapp-marketing-bot",
+  "version": "1.0.0",
+  "description": "QR-based WhatsApp marketing bot - sends customized messages to businesses",
+  "main": "src/bot.js",
+  "scripts": {
+    "start": "node src/bot.js",
+    "dry-run": "node src/bot.js --dry-run",
+    "test-msg": "node src/bot.js --test",
+    "scrape": "node src/scraper.js",
+    "scrape:dry": "node src/scraper.js --dry-run",
+    "enrich": "node src/enrich.js",
+    "enrich:dry": "node src/enrich.js --dry-run",
+    "email": "node src/scrape-and-email.js",
+    "email:dry": "node src/scrape-and-email.js --dry-run",
+    "email:test": "node src/scrape-and-email.js --test",
+    "campaign": "node src/campaign.js",
+    "campaign:dry": "node src/campaign.js --dry-run",
+    "insta": "node src/insta-campaign.js",
+    "insta:dry": "node src/insta-campaign.js --dry-run"
+  },
+  "keywords": [
+    "whatsapp",
+    "marketing",
+    "bot",
+    "automation"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "csv-parser": "^3.0.0",
+    "dotenv": "^16.4.5",
+    "nodemailer": "^9.0.5",
+    "puppeteer": "^25.8.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.26.0"
+  }
+}

@@ -1,0 +1,11 @@
+node_modules/
+.wwebjs_auth/
+.wwebjs_cache/
+.insta_cache/
+logs/
+data/*.json
+data/*.csv
+!data/contacts.example.csv
+.env
+qr-code.png
+.DS_Store
