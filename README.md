@@ -99,3 +99,25 @@ DEFAULT_TEMPLATE=1  # Default template ID
 - Start with small batches (10-20) and increase gradually.
 - Use a **secondary WhatsApp number** if possible.
 - Always do a `--dry-run` before the real run.
+
+## 📜 Disclaimer
+
+> **This project is provided strictly for educational and research purposes only.**
+
+By using, copying, modifying, or distributing this software, you acknowledge and agree to the following:
+
+1. **No Warranty.** This software is provided "AS IS", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and non-infringement. In no event shall the author(s) or contributor(s) be liable for any claim, damages, or other liability arising from the use of this software.
+
+2. **Third-Party Terms of Service.** This tool interacts with third-party platforms including WhatsApp, Instagram, and Google Maps. **Using this tool may violate their Terms of Service.** It is your sole responsibility to review and comply with the terms of any platform you interact with.
+
+3. **Anti-Spam & Marketing Laws.** Automated messaging may be subject to anti-spam and electronic communication laws in your jurisdiction (e.g., CAN-SPAM Act, GDPR, India's IT Act, TRAI regulations). **You are solely responsible for ensuring your use of this tool complies with all applicable local, state, national, and international laws and regulations.**
+
+4. **No Liability.** The author(s) of this project assume **no responsibility or liability** for any misuse, damages, account bans, legal consequences, or any other outcome resulting from the use of this software. You use this tool entirely at your own risk.
+
+5. **Data Privacy.** This tool processes personal data such as phone numbers, email addresses, and business information. **You are responsible for ensuring you have proper consent** to contact individuals and that you handle all data in compliance with applicable data protection regulations.
+
+6. **Not for Malicious Use.** This tool must not be used for spamming, harassment, phishing, or any other malicious or illegal activity.
+
+## 📄 License
+
+This project is licensed under the [ISC License](https://opensource.org/licenses/ISC).
