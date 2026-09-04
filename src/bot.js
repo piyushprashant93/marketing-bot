@@ -50,6 +50,7 @@ function cleanupStaleLocks() {
 const MIN_DELAY = parseInt(process.env.MIN_DELAY, 10) || 30;
 const MAX_DELAY = parseInt(process.env.MAX_DELAY, 10) || 90;
 const MAX_MESSAGES = parseInt(process.env.MAX_MESSAGES, 10) || 50;
+const FORCE_TEMPLATE = process.env.FORCE_TEMPLATE ? parseInt(process.env.FORCE_TEMPLATE, 10) : null;
 const DEFAULT_TEMPLATE = parseInt(process.env.DEFAULT_TEMPLATE, 10) || 1;
 
 const DRY_RUN = process.argv.includes("--dry-run");
@@ -269,7 +270,7 @@ async function runCampaign(client) {
 
   for (let i = 0; i < toSend.length; i++) {
     const contact = toSend[i];
-    const templateId = contact.template || DEFAULT_TEMPLATE;
+    const templateId = FORCE_TEMPLATE || contact.template || DEFAULT_TEMPLATE;
     const message = getMessage(templateId, contact.businessName, contact.category);
     const chatId = `${contact.phone}@c.us`;
 
@@ -309,8 +310,13 @@ async function runCampaign(client) {
         // Ignore if getting chat fails, sendMessage will handle the error
       }
 
-      // Do NOT send images for cold outreach (Template 1) to avoid spam filters
-      if (templateId !== 1) {
+      // Use custom image if provided, otherwise default to marketing_banner for non-cold outreach
+      const customImagePath = process.env.IMAGE_ATTACHMENT;
+      
+      if (customImagePath && fs.existsSync(customImagePath)) {
+        const media = MessageMedia.fromFilePath(customImagePath);
+        await client.sendMessage(chatId, media, { caption: message });
+      } else if (templateId !== 1) {
         const mediaPath = path.join(__dirname, "..", "data", "marketing_banner.jpg");
         const media = MessageMedia.fromFilePath(mediaPath);
         await client.sendMessage(chatId, media, { caption: message });
@@ -416,7 +422,12 @@ async function runTestMode(client) {
     await new Promise((r) => setTimeout(r, 3000));
   } catch (e) {}
 
-  if (DEFAULT_TEMPLATE !== 1) {
+  const customImagePath = process.env.IMAGE_ATTACHMENT;
+  
+  if (customImagePath && fs.existsSync(customImagePath)) {
+    const media = MessageMedia.fromFilePath(customImagePath);
+    await client.sendMessage(chatId, media, { caption: message });
+  } else if (DEFAULT_TEMPLATE !== 1) {
     const mediaPath = path.join(__dirname, "..", "data", "marketing_banner.jpg");
     const media = MessageMedia.fromFilePath(mediaPath);
     await client.sendMessage(chatId, media, { caption: message });

@@ -11,7 +11,9 @@ const INSTA_PASS = process.env.INSTAGRAM_PASSWORD;
 const MAX_MESSAGES = parseInt(process.env.INSTA_MAX_MESSAGES, 10) || 20;
 const DELAY_MIN = parseInt(process.env.INSTA_DELAY_MIN, 10) || 120;
 const DELAY_MAX = parseInt(process.env.INSTA_DELAY_MAX, 10) || 300;
+const FORCE_TEMPLATE = process.env.FORCE_TEMPLATE ? parseInt(process.env.FORCE_TEMPLATE, 10) : null;
 const DEFAULT_TEMPLATE = parseInt(process.env.DEFAULT_TEMPLATE, 10) || 1;
+const IMAGE_ATTACHMENT = process.env.IMAGE_ATTACHMENT || null;
 
 const DRY_RUN = process.argv.includes("--dry-run");
 const CONTACTS_FILE = path.join(__dirname, "..", "data", "contacts.csv");
@@ -22,6 +24,29 @@ function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 function randomDelay(minSec, maxSec) {
   const ms = (Math.floor(Math.random() * (maxSec - minSec + 1)) + minSec) * 1000;
   return sleep(ms);
+}
+
+// Dismiss common Instagram popups/overlays that block the DM input
+async function dismissPopups(page) {
+  const dismissTexts = ['Not Now', 'Not now', 'Turn Off', 'Allow', 'Cancel', 'Close', 'Save Info', 'Dismiss'];
+  try {
+    await page.evaluate((texts) => {
+      const buttons = [...document.querySelectorAll('button, div[role="button"]')];
+      for (const btn of buttons) {
+        const text = btn.textContent.trim();
+        if (texts.includes(text)) {
+          const rect = btn.getBoundingClientRect();
+          if (rect.width > 0 && rect.height > 0) {
+            btn.click();
+          }
+        }
+      }
+      // Also dismiss any dialog/modal close buttons (X icons)
+      const closeButtons = document.querySelectorAll('div[role="dialog"] button svg, div[role="dialog"] [aria-label="Close"]');
+      // Don't auto-close dialogs — only dismiss known text-based popups
+    }, texts);
+    await sleep(500);
+  } catch(e) {}
 }
 
 function loadSentList() {
@@ -152,13 +177,14 @@ async function main() {
     const contact = toProcess[i];
     const handle = contact.instagram.replace("@", "").trim();
     const biz = contact.business_name || "Business";
-    const templateId = contact.template || DEFAULT_TEMPLATE;
+    const templateId = FORCE_TEMPLATE || contact.template || DEFAULT_TEMPLATE;
     const msg = getMessage(templateId, biz, contact.category);
     const progress = chalk.gray(`[${i + 1}/${toProcess.length}]`);
 
     if (DRY_RUN) {
       console.log(`${progress} 📸 ${chalk.white(biz)} (@${handle})`);
       console.log(chalk.gray(`Preview:\n${msg.substring(0, 100)}...\n`));
+      if (IMAGE_ATTACHMENT) console.log(chalk.gray(`Attachment: ${IMAGE_ATTACHMENT}\n`));
       continue;
     }
 
@@ -167,7 +193,10 @@ async function main() {
       
       // Navigate directly to user profile
       await page.goto(`https://www.instagram.com/${handle}/`, { waitUntil: "networkidle2" });
-      await sleep(3000);
+      await sleep(4000);
+
+      // Dismiss any popups/overlays that Instagram might show
+      await dismissPopups(page);
       
       // Click message button (exact match to avoid clicking the sidebar "Messages" header)
       const messageBtnHandle = await page.evaluateHandle(() => {
@@ -189,48 +218,106 @@ async function main() {
         throw new Error("Message button not found on profile.");
       }
       
-      await sleep(5000); // Wait for chat window to open
+      await sleep(6000); // Wait for chat window to fully open
 
-      // Ensure we don't have popups blocking (like "Turn on Notifications")
-      const notNowBtn = await page.evaluateHandle(() => {
-        const elements = [...document.querySelectorAll('button')];
-        for (const el of elements) {
-          if (el.textContent.trim() === 'Not Now') {
-            const rect = el.getBoundingClientRect();
-            if (rect.width > 0 && rect.height > 0) return el;
-          }
-        }
-        return null;
-      });
-      if (notNowBtn && notNowBtn.asElement()) {
-         try { await notNowBtn.asElement().click(); await sleep(1000); } catch(e) {}
-      }
+      // Dismiss any popups again (Instagram often shows "Turn on Notifications" after opening DMs)
+      await dismissPopups(page);
 
-      // Type and send message (fallback through multiple possible selectors Instagram uses)
-      let inputHandle = null;
+      // Type and send message with retry logic
       const inputSelectors = [
+        'div[contenteditable="true"][role="textbox"]',
         'div[contenteditable="true"]', 
         'div[role="textbox"]', 
+        'p[contenteditable="true"]',
+        'textarea[placeholder]',
         'textarea'
       ];
       
-      for (const sel of inputSelectors) {
+      // Retry finding the input box up to 3 times with increasing waits
+      let inputHandle = null;
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        for (const sel of inputSelectors) {
+          try {
+            inputHandle = await page.waitForSelector(sel, { timeout: 5000, visible: true });
+            if (inputHandle) break;
+          } catch(e) {}
+        }
+        if (inputHandle) break;
+        
+        console.log(chalk.yellow(`   ⏳ Retry ${attempt}/3: input box not found yet, dismissing popups and waiting...`));
+        await dismissPopups(page);
+        
+        // Try clicking on the chat area to focus it
         try {
-          inputHandle = await page.waitForSelector(sel, { timeout: 4000, visible: true });
-          if (inputHandle) break;
+          await page.evaluate(() => {
+            const chatArea = document.querySelector('div[role="main"]') || 
+                             document.querySelector('section main');
+            if (chatArea) chatArea.click();
+          });
         } catch(e) {}
+        
+        await sleep(3000);
       }
 
       if (!inputHandle) {
         throw new Error("Could not find message input box (account might restrict DMs).");
       }
 
-      // We type it slowly to mimic human
-      await inputHandle.type(msg, { delay: 10 });
-      await sleep(1000);
+      // Split the message into smaller parts and send each as a separate DM
+      const parts = msg.split(/\n\n+/).map(p => p.trim()).filter(Boolean);
+      for (let p = 0; p < parts.length; p++) {
+        // Re-find the input box for each message (DOM can change after sending)
+        let msgInput = null;
+        for (const sel of inputSelectors) {
+          try {
+            msgInput = await page.waitForSelector(sel, { timeout: 5000, visible: true });
+            if (msgInput) break;
+          } catch(e) {}
+        }
+        if (!msgInput) {
+          throw new Error("Lost message input box while sending multi-part DM.");
+        }
+
+        await msgInput.click(); // Focus the input
+        await sleep(300);
+        await msgInput.type(parts[p], { delay: 10 });
+        await sleep(500);
+        await page.keyboard.press("Enter");
+        await sleep(2000); // Pause between parts to look human
+      }
       
-      // Press Enter to send
-      await page.keyboard.press("Enter");
+      // Send image if specified
+      if (IMAGE_ATTACHMENT && fs.existsSync(IMAGE_ATTACHMENT)) {
+        console.log(chalk.gray(`   📎 Attaching image...`));
+        try {
+          const fileInputs = await page.$$('input[type="file"]');
+          let attached = false;
+          for (const fileInput of fileInputs) {
+            const accept = await page.evaluate(el => el.getAttribute('accept') || '', fileInput);
+            if (accept.includes('image')) {
+              await fileInput.uploadFile(IMAGE_ATTACHMENT);
+              await sleep(4000); // Wait for upload preview/send
+              
+              // In some Instagram updates, uploading auto-sends. In others, we need to click Send or press Enter.
+              await page.keyboard.press("Enter");
+              // Also try to find a send button if it didn't auto-send
+              try {
+                const sendBtn = await page.$('div[role="button"]:has-text("Send")');
+                if (sendBtn) await sendBtn.click();
+              } catch(e) {}
+              
+              await sleep(3000);
+              attached = true;
+              break;
+            }
+          }
+          if (!attached) {
+             console.log(chalk.yellow(`   ⚠️ Could not find image file input.`));
+          }
+        } catch (e) {
+          console.log(chalk.red(`   ⚠️ Failed to attach image: ${e.message}`));
+        }
+      }
       
       markSent(handle, { businessName: biz });
       console.log(chalk.green(`✅ Sent successfully!`));

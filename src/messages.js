@@ -1,9 +1,14 @@
+require("dotenv").config();
+
 /**
  * WhatsApp Marketing Bot - Message Templates
  *
  * Category-specific, personalized marketing messages.
  * Each business gets a message tailored to their industry.
  */
+
+const SENDER_NAME = process.env.SENDER_NAME || "Piyush";
+const COMPANY_NAME = process.env.COMPANY_NAME || "SutraCode";
 
 // ─── Category-specific value propositions ────────────────────────────
 const categoryHooks = {
@@ -109,11 +114,11 @@ function coldOutreach(businessName, category) {
   
   return `${hook.emoji} ${spintax(greetings)} *${businessName}*!
 
-I'm [Your Name] from [Your Company]. We are a leading IT company, and I noticed you're a highly-rated ${category.replace(/_/g, " ")} business! 👏
+I'm ${SENDER_NAME} from ${COMPANY_NAME}. We are a leading IT company, and I noticed you're a highly-rated ${category.replace(/_/g, " ")} business! 👏
 
 ${spintax(introHooks)} Are you tired of ${hook.pain}?
 
-At [Your Company], we build world-class software specifically for businesses like yours:
+At ${COMPANY_NAME}, we build world-class software specifically for businesses like yours:
 
 ${hook.benefits.join("\n")}
 
@@ -156,17 +161,29 @@ function quickPitch(businessName, category) {
 
 Quick question — would upgrading to ${hook.benefits[0].replace(/^[^\s]+ /, "").toLowerCase()} help your business grow?
 
-We build world-class web & mobile apps at [Your Company].
+We build world-class web & mobile apps at ${COMPANY_NAME}.
 
 👉 *Reply "YES" to see our portfolio!*`;
 }
 
 // ─── Template Map ────────────────────────────────────────────────────
 
+/**
+ * Generate a Janmashtami wish.
+ */
+function janmashtamiWish(businessName, category) {
+  return `Hare Krishna *${businessName}*! 🦚
+
+Wishing you and your team a very Happy Janmashtami! May Lord Krishna's blessings bring joy, prosperity, and immense success to your business.
+
+From all of us at ${COMPANY_NAME}. ✨`;
+}
+
 const templates = {
   1: coldOutreach,
   2: followUp,
   3: quickPitch,
+  4: janmashtamiWish,
 };
 
 /**
@@ -180,7 +197,7 @@ function getMessage(templateId, businessName, category) {
   const template = templates[templateId];
   if (!template) {
     throw new Error(
-      `Invalid template ID: ${templateId}. Use 1, 2, or 3.`
+      `Invalid template ID: ${templateId}. Use 1, 2, 3, or 4.`
     );
   }
   return template(businessName || "there", category || "general");
