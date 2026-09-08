@@ -64,13 +64,13 @@ const categoryHooks = {
   },
   education: {
     emoji: "📚",
-    pain: "using disjointed tools for fees, attendance, and parent communication",
+    pain: "managing attendance on paper and losing track of fee leakages",
     benefits: [
-      "📚 Custom School ERP / Management Software",
-      "📝 A modern website that drives admissions",
-      "📱 A dedicated app for parents and students",
+      "✅ Automate attendance & generate conflict-free timetables",
+      "💰 Stop 100% of fee leakage with real-time reconciliation",
+      "📱 Give parents a transparent, real-time portal",
     ],
-    cta: "We build software that actually works for Indian educational institutes.",
+    cta: "Start your 14-Day Free Trial of Vidyantra today!",
   },
   retail: {
     emoji: "🛍️",
@@ -129,7 +129,8 @@ ${hook.cta}
 ✅ Local team, production-ready engineering
 
 Would love to show you some of our live client work! 
-👉 *Reply "YES" if you'd like me to send a link to our portfolio!* 🙌`;
+🌐 *Check out our website:* https://vidyantra.tech/
+👉 *Reply "YES" to book a quick demo!* 🙌`;
 }
 
 /**

@@ -58,6 +58,8 @@ const BUSINESS_CATEGORIES = [
   { query: "salon", category: "salon" },
   { query: "gym fitness", category: "gym" },
   { query: "coaching center", category: "education" },
+  { query: "school", category: "education" },
+  { query: "college", category: "education" },
   { query: "hotel", category: "hotel" },
   { query: "real estate agent", category: "real_estate" },
   { query: "retail shop", category: "retail" },

@@ -159,15 +159,15 @@ const categoryContent = {
     cta: "Every late-night inquiry becomes a potential member — your AI bot never sleeps!",
   },
   education: {
-    subject: "📚 Automate admission queries — free AI bot for coaching",
-    headline: "Answer Student Queries While You Focus on Teaching",
-    pain: "Spending hours answering the same admission & fee queries?",
+    subject: "📚 Vidyantra: The Operating System for Modern Education",
+    headline: "Automate Workflows and Scale Governance",
+    pain: "Are administrative tasks, fee leakages, and manual data entry slowing down your institution's growth?",
     bullets: [
-      "Share course details & fee structures instantly",
-      "Handle admission enquiries automatically",
-      "Provide batch timings & demo schedules",
+      "AI-powered scheduling and biometric attendance sync",
+      "Eliminate fee leakage with real-time bank reconciliation",
+      "Get 360° operational visibility with immutable transaction logs",
     ],
-    cta: "Parents comparing coaching centers at 10 PM? Your bot answers instantly!",
+    cta: "Go Live in 48 Hours. Experience the future of educational management today.",
   },
   hotel: {
     subject: "🏨 More bookings with a free AI assistant for your hotel",

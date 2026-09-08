@@ -316,12 +316,14 @@ async function runCampaign(client) {
       if (customImagePath && fs.existsSync(customImagePath)) {
         const media = MessageMedia.fromFilePath(customImagePath);
         await client.sendMessage(chatId, media, { caption: message });
-      } else if (templateId !== 1) {
-        const mediaPath = path.join(__dirname, "..", "data", "marketing_banner.jpg");
-        const media = MessageMedia.fromFilePath(mediaPath);
-        await client.sendMessage(chatId, media, { caption: message });
       } else {
-        await client.sendMessage(chatId, message);
+        const mediaPath = path.join(__dirname, "..", "data", "marketing_banner.jpg");
+        if (fs.existsSync(mediaPath)) {
+          const media = MessageMedia.fromFilePath(mediaPath);
+          await client.sendMessage(chatId, media, { caption: message });
+        } else {
+          await client.sendMessage(chatId, message);
+        }
       }
 
       // Clear typing state
@@ -427,12 +429,14 @@ async function runTestMode(client) {
   if (customImagePath && fs.existsSync(customImagePath)) {
     const media = MessageMedia.fromFilePath(customImagePath);
     await client.sendMessage(chatId, media, { caption: message });
-  } else if (DEFAULT_TEMPLATE !== 1) {
-    const mediaPath = path.join(__dirname, "..", "data", "marketing_banner.jpg");
-    const media = MessageMedia.fromFilePath(mediaPath);
-    await client.sendMessage(chatId, media, { caption: message });
   } else {
-    await client.sendMessage(chatId, message);
+    const mediaPath = path.join(__dirname, "..", "data", "marketing_banner.jpg");
+    if (fs.existsSync(mediaPath)) {
+      const media = MessageMedia.fromFilePath(mediaPath);
+      await client.sendMessage(chatId, media, { caption: message });
+    } else {
+      await client.sendMessage(chatId, message);
+    }
   }
   
   console.log(chalk.green.bold("  ✅ Test message sent to your own WhatsApp!\n"));
